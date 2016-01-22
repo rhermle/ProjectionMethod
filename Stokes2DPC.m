@@ -21,6 +21,11 @@ end
 
 [F1 F2] = force(X, Y, mu, width, p0, g, R, dx, L);
 
+figure(99);
+surf(X,Y,F1);
+figure(100);
+surf(X,Y,F2);
+
 P = zeros(numYCells, numXCells, numTimeSteps);
 U = zeros(numYCells, numXCells, numTimeSteps);
 V = zeros(numYCells, numXCells, numTimeSteps);
@@ -45,6 +50,7 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 1 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     %Question:  Assume small strain tensor is symmetric, so transpose goes away?
     %Random Question:  Do they ever use FFT to solve these?
+    
     %u_star = u + mu*(uxx + uyy) + F1
     %v_star = v + mu*(vxx + vyy) + F2
     
@@ -55,31 +61,32 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
         end
     end
     
+    %Set the boundary condition for u_star to be the same as u
+    
     %Left edge, excluding corners, use forward difference for uxx and vxx
     %Right edge, excluding corners, use backward difference for uxx and vxx
-    for j = 2:numYCells-1
+    for j = 1:numYCells
         i = 1;
-        u_star(ind(i,j),t) = u(ind(i,j),t) + (1/(dx^3)) * mu * (2*u(ind(i,j),t) - 5*u(ind(i+1,j),t) + 4*u(ind(i+2,j),t) - u(ind(i+3,j),t)) + (1/(dx^2)) * mu * (u(ind(i,j+1),t) - 2*u(ind(i,j),t) + u(ind(i,j-1),t)) + F1(i,j);
-        v_star(ind(i,j),t) = v(ind(i,j),t) + (1/(dx^3)) * mu * (2*v(ind(i,j),t) - 5*v(ind(i+1,j),t) + 4*v(ind(i+2,j),t) - v(ind(i+3,j),t)) + (1/(dx^2)) * mu * (v(ind(i,j+1),t) - 2*v(ind(i,j),t) + v(ind(i,j-1),t)) + F2(i,j);
+        u_star(ind(i,j),t) = 1;
+        v_star(ind(i,j),t) = 0;
         
         i = numXCells;
-        u_star(ind(i,j), t) = u(ind(i,j), t) + (1/(dx^3)) * mu * (2*u(ind(i,j),t) - 5*u(ind(i-1,j),t) + 4*u(ind(i-2,j),t) - u(ind(i-3,j),t)) + (1/(dx^2)) * mu * (u(ind(i,j+1),t) - 2*u(ind(i,j),t) + u(ind(i,j-1),t)) + F1(i,j);
-        v_star(ind(i,j), t) = v(ind(i,j), t) + (1/(dx^3)) * mu * (2*v(ind(i,j),t) - 5*v(ind(i-1,j),t) + 4*v(ind(i-2,j),t) - v(ind(i-3,j),t)) + (1/(dx^2)) * mu * (v(ind(i,j+1),t) - 2*v(ind(i,j),t) + v(ind(i,j-1),t)) + F2(i,j);
+        u_star(ind(i,j), t) = 1;
+        v_star(ind(i,j), t) = 0;
     end
     
     %Bottom edge, excluding corners, use forward difference for uyy and vyy
     %Top edge, excluding corners, use backward difference for uyy and vyy
     for i = 2:numXCells-1
         j = 1;
-        u_star(ind(i,j),t) = u(ind(i,j),t) + (1/(dx^3)) * mu * (2*u(ind(i,j),t) - 5*u(ind(i,j+1),t) + 4*u(ind(i,j+2),t) - u(ind(i,j+3),t)) + (1/(dx^2)) * mu * (u(ind(i+1,j),t) - 2*u(ind(i,j),t) + u(ind(i-1,j),t)) + F1(i,j);
-        v_star(ind(i,j),t) = v(ind(i,j),t) + (1/(dx^3)) * mu * (2*v(ind(i,j),t) - 5*v(ind(i,j+1),t) + 4*v(ind(i,j+2),t) - v(ind(i,j+3),t)) + (1/(dx^2)) * mu * (v(ind(i+1,j),t) - 2*v(ind(i,j),t) + v(ind(i-1,j),t)) + F1(i,j);
+        %Want uy = 0
+        u_star(ind(i,j),t) = u_star(ind(i,j+1),t);
+        v_star(ind(i,j),t) = 0;
         
         j = numYCells;
-        u_star(ind(i,j),t) = u(ind(i,j),t) + (1/(dx^3)) * mu * (2*u(ind(i,j),t) - 5*u(ind(i,j-1),t) + 4*u(ind(i,j-2),t) - u(ind(i,j-3),t)) + (1/(dx^2)) * mu * (u(ind(i+1,j),t) - 2*u(ind(i,j),t) + u(ind(i-1,j),t)) + F1(i,j);
-        v_star(ind(i,j),t) = v(ind(i,j),t) + (1/(dx^3)) * mu * (2*v(ind(i,j),t) - 5*v(ind(i,j-1),t) + 4*v(ind(i,j-2),t) - v(ind(i,j-3),t)) + (1/(dx^2)) * mu * (v(ind(i+1,j),t) - 2*v(ind(i,j),t) + v(ind(i-1,j),t)) + F1(i,j);
+        u_star(ind(i,j),t) = u_star(ind(i,j-1),t);
+        v_star(ind(i,j),t) = 0;
     end
-
-    %%%%%%%%%***Ignore the corners for now***%%%%%%%%%%%
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 2 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -148,16 +155,34 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 3 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     %u_next = u_star - grad(p) 
     
-    %Question:  Where should I enforce free slip (uy = 0 on top/bottom)?
-    
     if t ~= numTimeSteps
      
-        for i=2:numXCells-1
-            for j=2:numYCells-1 
-                u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i+1,j),t) - p(ind(i-1,j),t));
-                v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j+1),t) - p(ind(i,j-1),t));
-            end
-        end
+        for i=1:numXCells
+            for j=1:numYCells 
+
+                if j==1
+                    v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j+1),t) - p(ind(i,j),t));
+                    %v(ind(i,j),t+1) = 0;
+                elseif j==numYCells
+                    v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t));
+                    %v(ind(i,j),t+1) = 0;
+                else
+                    v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j+1),t) - p(ind(i,j-1),t));
+                end
+                
+                if i==1 
+                    u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(dx)) * (p(ind(i+1,j),t) - p(ind(i,j),t));
+                    %v(ind(i,j),t+1) = 0;
+                elseif i==numXCells
+                    u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t));
+                    %v(ind(i,j),t+1) = 0;
+                else
+                    u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i+1,j),t) - p(ind(i-1,j),t));
+                end
+                       
+                
+            end    
+        end        
     end
     
     tmp1 = p(:, t);
