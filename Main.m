@@ -2,8 +2,8 @@ clear all;
 close all;
 clc;
 
-animate = 1;
-checkL2E = 0;
+animate = 0;
+checkL2E = 1;
 
 %Pressure Differential (Right side)
 p0 = 0;

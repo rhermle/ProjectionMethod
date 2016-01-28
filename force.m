@@ -21,6 +21,7 @@ id1 = (z > -E) & (z < E);
 
 delta = zeros(size(x));
 delta (id1) = (1 + cos((pi * z(id1) / E))) / (2 * E);
+%2E in denominator?
 
 f1 = delta .* cos(theta);
 f2 = delta .* sin(theta);

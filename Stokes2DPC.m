@@ -42,7 +42,7 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     if(t == 1)
         for i=1:numXCells
             for j=1:numYCells
-                u(ind(i,j), t) = 1;
+                u(ind(i,j), t) = 0;
             end
         end
     end  
@@ -67,11 +67,11 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     %Right edge, excluding corners, use backward difference for uxx and vxx
     for j = 1:numYCells
         i = 1;
-        u_star(ind(i,j),t) = 1;
+        u_star(ind(i,j),t) = 0;
         v_star(ind(i,j),t) = 0;
         
         i = numXCells;
-        u_star(ind(i,j), t) = 1;
+        u_star(ind(i,j), t) = 0;
         v_star(ind(i,j), t) = 0;
     end
     
@@ -80,11 +80,13 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     for i = 2:numXCells-1
         j = 1;
         %Want uy = 0
-        u_star(ind(i,j),t) = u_star(ind(i,j+1),t);
+        %u_star(ind(i,j),t) = u_star(ind(i,j+1),t);
+        u_star(ind(i,j),t) = 0;
         v_star(ind(i,j),t) = 0;
         
         j = numYCells;
-        u_star(ind(i,j),t) = u_star(ind(i,j-1),t);
+        %u_star(ind(i,j),t) = u_star(ind(i,j-1),t);
+        u_star(ind(i,j),t) = 0;
         v_star(ind(i,j),t) = 0;
     end
     
