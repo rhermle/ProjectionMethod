@@ -2,8 +2,8 @@ clear all;
 close all;
 clc;
 
-animate = 0;
-checkL2E = 1;
+animate = 1;
+checkL2E = 0;
 
 %Pressure Differential (Right side)
 p0 = 0;
@@ -17,9 +17,9 @@ g = 0;
 height = 20;
 width = 20;
 R = 2;
-L = 10;
+L = 8;
 %T = .25;
-timeSteps = 5;
+timeSteps = 2;
 
 quivRes = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -54,9 +54,21 @@ toc;
 
 if(animate == 1)
     
+    figure();
+    surf(X,Y,U(:,:,timeSteps));
+    title('U');
+    
+    figure();
+    surf(X,Y,V(:,:,timeSteps));
+    title('V');
+    
+    figure();
+    surf(X,Y,P(:,:,timeSteps));
+    title('P');
+    
     for i = 1:timeSteps
 
-        figure(1);
+        figure();
         clf;
         hold on;
 
@@ -70,6 +82,7 @@ if(animate == 1)
         % streamline(X,Y,U,V,-width / 2, -0.1);
         drawnow;
         hold off;
+        title('UV Quiver');
         pause();
     end
 end
@@ -110,7 +123,7 @@ if checkL2E
         L2EV(i) = sqrt(L2EV(i) / (numXCells * numYCells));
     end
 
-    figure(2);
+    figure();
     surf(x,y, p(:,:,timeSteps) - interp2(X,Y,P(:,:,timeSteps),x,y));
     title('Localized Error for P (Pressure)');
     print('LocalPError', '-djpeg');
@@ -121,7 +134,7 @@ if checkL2E
     % L2EV = L2EV(testPoints);
 
     save('data.mat','dx','L2EP','L2EU','L2EV');
-    figure(3)
+    figure()
     loglog(dx,L2EP,'-',dx,dx.^2,'--');
     title('L2 Error for P (Pressure)');
     print('_L2EP', '-djpeg');
@@ -129,12 +142,12 @@ if checkL2E
     %loglog(d,L2EP,'-',d,L2EP(1)-d(1) + d,'r--',d,L2EP(1)-d(1)^2 + d.^2,'g--');
     %title('L2 Error for P (Pressure)');
 
-    figure(4)
+    figure()
     loglog(dx,L2EU,'-',dx,dx.^2,'--');
     title('L2 Error for U (Horizontal Velocity)');
     print('_L2EU', '-djpeg');
 
-    figure(5)
+    figure()
     loglog(dx,L2EV,'-',dx,dx.^2,'--');
     title('L2 Error for V (Vertical Velocity)');
     print('_L2EV', '-djpeg');

@@ -21,10 +21,12 @@ end
 
 [F1 F2] = force(X, Y, mu, width, p0, g, R, dx, L);
 
-figure(99);
+figure();
 surf(X,Y,F1);
-figure(100);
+title('F1');
+figure();
 surf(X,Y,F2);
+title('F2');
 
 P = zeros(numYCells, numXCells, numTimeSteps);
 U = zeros(numYCells, numXCells, numTimeSteps);
@@ -56,8 +58,8 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     
     for i=2:numXCells-1
         for j=2:numYCells-1
-            u_star(ind(i,j),t) = u(ind(i,j),t) + (1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(i,j);
-            v_star(ind(i,j),t) = v(ind(i,j),t) + (1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(i,j);
+            u_star(ind(i,j),t) = u(ind(i,j),t) + (1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(j,i);
+            v_star(ind(i,j),t) = v(ind(i,j),t) + (1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(j,i);
         end
     end
     
@@ -90,6 +92,20 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
         v_star(ind(i,j),t) = 0;
     end
     
+    tmp1 = u_star(:, t);
+    tmp2 = v_star(:, t);
+
+    %We must transpose here because in matlab rows will map to Y values and
+    %columns will map to X values, which is the opposite of how we have
+    %defined it in our code.
+       
+    U_Star_Temp = tmp1(ind)';
+    V_Star_Temp = tmp2(ind)';
+   
+    figure(56789)
+    quiver(X,Y,U_Star_Temp,V_Star_Temp);
+    title('U* Quiver');
+    
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 2 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     
     %p_xx + p_yy = u_star_x + v_star_y
@@ -108,7 +124,11 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
             A(ind(i,j), ind(i,j+1)) = 1;
             A(ind(i,j), ind(i,j-1)) = 1;
 
-            b(ind(i,j)) = (dx/2) * (u_star(ind(i+1,j),t) - u_star(ind(i-1,j),t) + v_star(ind(i,j+1),t ) - v_star(ind(i,j-1),t));
+            %b(ind(i,j)) = (dx/2) * (u_star(ind(i+1,j),t) - u_star(ind(i-1,j),t) + v_star(ind(i,j+1),t ) - v_star(ind(i,j-1),t));
+            b(ind(i,j)) = (dx/2) * (u_star(ind(i+1,j+1),t) - u_star(ind(i,j+1),t) + ...
+                                    u_star(ind(i+1,j),t) - u_star(ind(i,j),t) + ... 
+                                    v_star(ind(i+1,j+1),t ) - v_star(ind(i+1,j),t) + ...
+                                    v_star(ind(i,j+1),t ) - v_star(ind(i,j),t));
         end
     end
 
@@ -157,30 +177,46 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 3 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     %u_next = u_star - grad(p) 
     
+    %Question:  Why can't we just set u and v to zero at the borders?
+    
     if t ~= numTimeSteps
      
         for i=1:numXCells
             for j=1:numYCells 
 
-                if j==1
-                    v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j+1),t) - p(ind(i,j),t));
-                    %v(ind(i,j),t+1) = 0;
-                elseif j==numYCells
-                    v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t));
-                    %v(ind(i,j),t+1) = 0;
+                if j==1 || j==numYCells || i==1 || i==numXCells
+                    v(ind(i,j),t+1) = 0; 
+                    u(ind(i,j),t+1) = 0; 
                 else
-                    v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j+1),t) - p(ind(i,j-1),t));
+                    u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
+                    v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
                 end
                 
-                if i==1 
-                    u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(dx)) * (p(ind(i+1,j),t) - p(ind(i,j),t));
-                    %v(ind(i,j),t+1) = 0;
-                elseif i==numXCells
-                    u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t));
-                    %v(ind(i,j),t+1) = 0;
-                else
-                    u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i+1,j),t) - p(ind(i-1,j),t));
-                end
+%                 if j==1
+%                     v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j+1),t) - p(ind(i,j),t));
+%                     %v(ind(i,j),t+1) = 0;     
+%                 elseif j==numYCells
+%                     v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t));
+%                     %v(ind(i,j),t+1) = 0;
+%                 elseif i==1 || i==numXCells
+%                     v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j+1),t) - p(ind(i,j-1),t));
+%                 else
+%                     %v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j+1),t) - p(ind(i,j-1),t));
+%                     v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
+%                 end
+%                 
+%                 if i==1 
+%                     u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(dx)) * (p(ind(i+1,j),t) - p(ind(i,j),t));
+%                     %v(ind(i,j),t+1) = 0;
+%                 elseif i==numXCells
+%                     u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t));
+%                     %v(ind(i,j),t+1) = 0;
+%                 elseif j==1 || j==numYCells
+%                     u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i+1,j),t) - p(ind(i-1,j),t));
+%                 else
+%                     %u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i+1,j),t) - p(ind(i-1,j),t));
+%                     u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
+%                 end
                        
                 
             end    
