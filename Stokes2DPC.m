@@ -1,6 +1,5 @@
 function [ P U V X Y numXCells numYCells dx] = Stokes2DPC(g, numYCells, p0, mu, height, width, R, L, numTimeSteps, debug)
 
-
 y = linspace(-height / 2, height / 2, numYCells);
 dx = y(2) - y(1);
 numXCells = round((width / dx) + 1);
@@ -21,12 +20,14 @@ end
 
 [F1 F2] = force(X, Y, mu, width, p0, g, R, dx, L);
 
-figure();
-surf(X,Y,F1);
-title('F1');
-figure();
-surf(X,Y,F2);
-title('F2');
+if debug
+    figure();
+    surf(X,Y,F1);
+    title('F1');
+    figure();
+    surf(X,Y,F2);
+    title('F2');
+end
 
 P = zeros(numYCells, numXCells, numTimeSteps);
 U = zeros(numYCells, numXCells, numTimeSteps);
@@ -45,6 +46,7 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
         for i=1:numXCells
             for j=1:numYCells
                 u(ind(i,j), t) = 0;
+                v(ind(i,j), t) = 0;
             end
         end
     end  
@@ -102,9 +104,13 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     U_Star_Temp = tmp1(ind)';
     V_Star_Temp = tmp2(ind)';
    
-    figure(56789)
-    quiver(X,Y,U_Star_Temp,V_Star_Temp);
-    title('U* Quiver');
+    if debug
+        
+        figure(56789)
+        quiver(X,Y,U_Star_Temp,V_Star_Temp);
+        title('U* Quiver');
+        
+    end
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 2 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     
@@ -144,35 +150,56 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
         %O(2) backward difference formula for right edge
         %px(M,j) = 0 = 3p(M,j)-4p(M-1,j)+1p(M-2,j)
         
-        A(ind(1,j), ind(1,j)) = -3;
-        A(ind(1,j), ind(2,j)) = 4;
-        A(ind(1,j), ind(3,j)) = -1;
-        b(ind(1,j)) = 0;
-        
-        A(ind(numXCells,j), ind(numXCells,j)) = 3;
-        A(ind(numXCells,j), ind(numXCells-1,j)) = -4;
-        A(ind(numXCells,j), ind(numXCells-2,j)) = 1;
-        b(ind(numXCells,j)) = 0;
+%         A(ind(1,j), ind(1,j)) = -3;
+%         A(ind(1,j), ind(2,j)) = 4;
+%         A(ind(1,j), ind(3,j)) = -1;
+%         b(ind(1,j)) = 0;
+%         
+%         A(ind(numXCells,j), ind(numXCells,j)) = 3;
+%         A(ind(numXCells,j), ind(numXCells-1,j)) = -4;
+%         A(ind(numXCells,j), ind(numXCells-2,j)) = 1;
+%         b(ind(numXCells,j)) = 0;
 
+        A(ind(1,j), ind(1,j)) = 1;
+        b(ind(1,j)) = 0;
+        A(ind(numXCells,j), ind(numXCells,j)) = 1;
+        b(ind(numXCells,j)) = 0;
     end
 
     %Top and bottom edges
     for i = 1:numXCells
 
-        %Neumann
-        A(ind(i,1), ind(i,1)) = -3;
-        A(ind(i,1), ind(i,2)) = 4;
-        A(ind(i,1), ind(i,3)) = -1;
+%         %Neumann
+%         A(ind(i,1), ind(i,1)) = -3;
+%         A(ind(i,1), ind(i,2)) = 4;
+%         A(ind(i,1), ind(i,3)) = -1;
+%         b(ind(i,1)) = 0;
+%         
+%         A(ind(i,numYCells), ind(i,numYCells)) = 3;
+%         A(ind(i,numYCells), ind(i,numYCells-1)) = -4;
+%         A(ind(i,numYCells), ind(i,numYCells-2)) = 1;
+%         b(ind(i,numYCells)) = 0;
+
+        A(ind(i,1),ind(i,1)) = 1;
         b(ind(i,1)) = 0;
-        
-        A(ind(i,numYCells), ind(i,numYCells)) = 3;
-        A(ind(i,numYCells), ind(i,numYCells-1)) = -4;
-        A(ind(i,numYCells), ind(i,numYCells-2)) = 1;
+        A(ind(i,numYCells),ind(i,numYCells)) = 1;
         b(ind(i,numYCells)) = 0;
-    
+        
     end
  
-    p(:, t) = pinv(A) * b;
+    %p(:, t) = pinv(A) * b;
+    
+    if debug
+        
+        figure();
+        surf(X,Y,b(ind(:,:)));
+        message = sprintf('b, t = %f',t);
+        title(message);
+        
+    end
+    
+    p(:,t) = A\b;
+    cond(A);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 3 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     %u_next = u_star - grad(p) 
@@ -188,8 +215,11 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
                     v(ind(i,j),t+1) = 0; 
                     u(ind(i,j),t+1) = 0; 
                 else
-                    u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
-                    v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
+                     u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
+                     v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
+
+                      %u(ind(i,j),t+1) = (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
+                      %v(ind(i,j),t+1) = (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
                 end
                 
 %                 if j==1

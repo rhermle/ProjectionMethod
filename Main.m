@@ -3,7 +3,7 @@ close all;
 clc;
 
 animate = 1;
-checkL2E = 0;
+checkL2E = 1;
 
 %Pressure Differential (Right side)
 p0 = 0;
@@ -16,10 +16,10 @@ g = 0;
 
 height = 20;
 width = 20;
-R = 2;
-L = 8;
+R = 5;
+L = 5;
 %T = .25;
-timeSteps = 2;
+timeSteps = 1;
 
 quivRes = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -28,9 +28,13 @@ quivRes = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %Compute Stokes2DPCwith a high discretization and use it as the "analytical" solution
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-num = 40;
+%num / 2 must be even
+num = 52;
 tic;
-[P U V X Y NUMXCELLS NUMYCELLS] = Stokes2DPC(g, num, p0, mu, height, width, R,L, timeSteps, 0);
+%[P U V X Y NUMXCELLS NUMYCELLS] = Stokes2DPC(g, num, p0, mu, height, width, R,L, timeSteps, 0);
+
+[P U V X Y NUMXCELLS NUMYCELLS] = pTest(height, width, R, L, timeSteps, num);
+
 toc;
 
 % i=2;
@@ -52,20 +56,8 @@ toc;
 %pcolor?
 %shading interp
 
-if(animate == 1)
-    
-    figure();
-    surf(X,Y,U(:,:,timeSteps));
-    title('U');
-    
-    figure();
-    surf(X,Y,V(:,:,timeSteps));
-    title('V');
-    
-    figure();
-    surf(X,Y,P(:,:,timeSteps));
-    title('P');
-    
+if animate
+   
     for i = 1:timeSteps
 
         figure();
@@ -80,10 +72,30 @@ if(animate == 1)
         streamline(X,Y,U(:,:,i),V(:,:,i),.1,-1);
         % streamline(X,Y,U,V,-width / 2, 0.1);
         % streamline(X,Y,U,V,-width / 2, -0.1);
+        
+        message = sprintf('UV Quiver, t = %f', i);
+        title(message);
+        
         drawnow;
         hold off;
-        title('UV Quiver');
-        pause();
+        
+%         figure();
+%         surf(X,Y,U(:,:,i));
+%         message = sprintf('U, t = %f', i);
+%         title(message);
+% 
+%         figure();
+%         surf(X,Y,V(:,:,i));
+%         message = sprintf('V, t = %f', i);
+%         title(message);
+% 
+        figure();
+        surf(X,Y,P(:,:,i));
+        message = sprintf('P, t = %f', i);
+        title(message);
+        drawnow;
+        
+        %pause();
     end
 end
 
@@ -91,12 +103,14 @@ end
 if checkL2E
 
     %Compute the L2E with 20 different grid spacing values
-    testPoints = (num/2 - 10): (num/2);
+    %Outputting NAN when n is odd
+    %testPoints = (num/2 - 20): 2 : (num/2);
+    testPoints = (num - 20): 2 : (num);
 
-    L2EP = zeros(testPoints(end),1);
-    L2EU = zeros(testPoints(end),1);
-    L2EV = zeros(testPoints(end),1);
-    dx = zeros(testPoints(end),1);
+    L2EP = zeros(10,1);
+    L2EU = zeros(10,1);
+    L2EV = zeros(10,1);
+    dx = zeros(10,1);
 
     % Compute the L2 error
     %2D: || u(x,y) || = sqrt( 1/M^2 sum_{j=1}^M sum_{k=1]^M u_{j,k}^2 }
@@ -104,8 +118,7 @@ if checkL2E
         testPoints(i)
         tic;
         [ p u v x y numXCells numYCells dx(i)] = Stokes2DPC(g, testPoints(i), p0, mu, height, width, R, L, timeSteps, 0);
-        toc;
-
+        
         %d(i) = (1-0) / (i - 1);
 
         for j=1:numXCells
@@ -121,6 +134,8 @@ if checkL2E
         L2EP(i) = sqrt(L2EP(i) / (numXCells * numYCells));
         L2EU(i) = sqrt(L2EU(i) / (numXCells * numYCells));
         L2EV(i) = sqrt(L2EV(i) / (numXCells * numYCells));
+        
+        toc;
     end
 
     figure();
