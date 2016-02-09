@@ -29,7 +29,7 @@ quivRes = 1;
 %Compute Stokes2DPCwith a high discretization and use it as the "analytical" solution
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %num / 2 must be even
-num = 52;
+num = 32;
 tic;
 %[P U V X Y NUMXCELLS NUMYCELLS] = Stokes2DPC(g, num, p0, mu, height, width, R,L, timeSteps, 0);
 
@@ -98,7 +98,6 @@ if animate
         %pause();
     end
 end
-
 
 if checkL2E
 

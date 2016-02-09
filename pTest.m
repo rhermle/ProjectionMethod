@@ -23,8 +23,8 @@ id2 = z < -E;
 temp = zeros(ny,nx);
 
 for i = 1:ts
-    temp(id) = -1/(2*R)*(z(id)/E + sin(pi*z(id)/E)/pi);
-    temp(id2) = -1/(2*R);
+    temp(id) = -1/(2*R)*(1 - z(id)/E - sin(pi*z(id)/E)/pi);
+    temp(id2) = -1/(R);
     P(:,:,i) = temp;
 end
 
