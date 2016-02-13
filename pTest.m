@@ -9,6 +9,7 @@ dx = y(2) - y(1);
 nx = round((w / dx) + 1);
 %X = linspace(-width / 2, width / 2, numXCells);
 x = linspace(0, w, nx);
+%x = y + h/2;
 [X Y] = meshgrid(x,y);
 
 P = zeros(ny, nx, ts);
@@ -18,7 +19,7 @@ V = zeros(ny, nx, ts);
 z = sqrt( (X-(L+R)).^2 + Y.^2 ) - R;
 
 id = -E < z & z < E;
-id2 = z < -E;
+id2 = z <= -E;
 
 temp = zeros(ny,nx);
 

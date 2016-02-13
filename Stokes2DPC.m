@@ -117,6 +117,22 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     %p_xx + p_yy = u_star_x + v_star_y
     %p(i-1,j) - 4p_(i,j) + p(i+1,j) + p(i,j+1) + p(i,j-1) = (d/2) * (u_star(i+1,j) - u_star(i-1,j) + v_star(i,j+1) - v_star(i,j-1))  
 
+%     z = sqrt( (X-(L+R)).^2 + Y.^2 ) - R;
+%     E = .5 * R;
+%     id = -E < z & z < E;
+%     id2 = z <= -E;
+% 
+%     temp = zeros(numYCells,numXCells);
+% 
+%     temp(id) = -1/(2*R)*(1 - z(id)/E - sin(pi*z(id)/E)/pi);
+%     temp(id2) = -1/(R);
+%     
+%     for i = 1:numXCells
+%         for j = 1:numYCells
+%             p(ind(i,j),t) = temp(j,i);
+%         end
+%     end
+    
     A = zeros(numXCells*numYCells,numXCells*numYCells);
     b = zeros(numXCells*numYCells,1);
 
@@ -199,7 +215,7 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     end
     
     p(:,t) = A\b;
-    cond(A);
+    %cond(A);
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 3 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     %u_next = u_star - grad(p) 
@@ -261,6 +277,7 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     %columns will map to X values, which is the opposite of how we have
     %defined it in our code.
     
+    %P(:,:,t) = temp;
     P(:,:,t) = tmp1(ind)';
     U(:,:,t) = tmp2(ind)';
     V(:,:,t) = tmp3(ind)';
