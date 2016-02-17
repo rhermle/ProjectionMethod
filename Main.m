@@ -4,7 +4,7 @@ clc;
 
 animate = 0;
 checkError = 1;
-Linf = 0;
+Linf = 1;
 
 %Pressure Differential (Right side)
 p0 = 0;
@@ -20,7 +20,7 @@ width = 20;
 R = 5;
 L = 5;
 %T = .25;
-timeSteps = 3;
+timeSteps = 20;
 
 quivRes = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,7 +30,7 @@ quivRes = 1;
 %Compute Stokes2DPCwith a high discretization and use it as the "analytical" solution
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %num / 2 must be even
-num = 52;
+num = 40;
 tic;
 %[P U V X Y NUMXCELLS NUMYCELLS] = Stokes2DPC(g, num, p0, mu, height, width, R,L, timeSteps, 0);
 

@@ -2,6 +2,7 @@ function [ P U V X Y numXCells numYCells dx] = Stokes2DPC(g, numYCells, p0, mu, 
 
 y = linspace(-height / 2, height / 2, numYCells);
 dx = y(2) - y(1);
+dt = .01*dx^2;
 numXCells = round((width / dx) + 1);
 %X = linspace(-width / 2, width / 2, numXCells);
 x = linspace(0, width, numXCells);
@@ -60,8 +61,8 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     
     for i=2:numXCells-1
         for j=2:numYCells-1
-            u_star(ind(i,j),t) = u(ind(i,j),t) + (1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(j,i);
-            v_star(ind(i,j),t) = v(ind(i,j),t) + (1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(j,i);
+            u_star(ind(i,j),t) = u(ind(i,j),t) + dt * (1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(j,i);
+            v_star(ind(i,j),t) = v(ind(i,j),t) + dt * (1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(j,i);
         end
     end
     
@@ -223,10 +224,35 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     %Question:  Why can't we just set u and v to zero at the borders?
     
     if t ~= numTimeSteps
-     
+             
+%         z = sqrt( (X-(L+R)).^2 + Y.^2 ) - R;
+%         E = .5 * R;
+%         id = -E < z & z < E;
+%         id2 = z <= -E;
+%   
+%         px = zeros(numYCells,numXCells);
+%         py = zeros(numYCells,numXCells);
+% 
+%         px(id) = (1/(2*R*E)) * ((X(id) - (L+R)) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 )) + (cos(pi*z(id)/E)) .*(X(id) - (L+R)) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2)));
+%         px(id2) = 0;
+% 
+%         py(id) = (1/(2*R*E)) * (Y(id) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 )) + (cos(pi*z(id)/E)) .*Y(id) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2)));
+%         py(id2) = 0;
+%         
+%         pxHat = zeros(numXCells*numYCells,1);
+%         pyHat = zeros(numXCells*numYCells,1);
+%         
+%         for i = 1:numXCells
+%             for j = 1:numYCells
+%                 pxHat(ind(i,j)) = px(j,i);
+%                 pyHat(ind(i,j)) = py(j,i);
+%             end
+%         end
+        
+        
         for i=1:numXCells
             for j=1:numYCells 
-
+  
                 if j==1 || j==numYCells || i==1 || i==numXCells
                     v(ind(i,j),t+1) = 0; 
                     u(ind(i,j),t+1) = 0; 
@@ -234,8 +260,9 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
                      u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
                      v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
 
-                      %u(ind(i,j),t+1) = (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
-                      %v(ind(i,j),t+1) = (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
+%                      u(ind(i,j),t+1) = u_star(ind(i,j),t) - pxHat(ind(i,j));
+%                      v(ind(i,j),t+1) = v_star(ind(i,j),t) - pyHat(ind(i,j));
+
                 end
                 
 %                 if j==1

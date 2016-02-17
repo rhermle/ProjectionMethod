@@ -12,8 +12,7 @@ id2 = theta > (-pi / 2) & theta < (pi / 2);
 
 alpha(id2) = 0;
 
-%E = 2 * dx;
-%E = 2 * .125;
+%E = dx;
 E = .5 * R;
 
 %z = x.^2 + y.^2 - R^2;
