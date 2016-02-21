@@ -1,11 +1,17 @@
 function [ P U V X Y numXCells numYCells dx] = Stokes2DPC(g, numYCells, p0, mu, height, width, R, L, numTimeSteps, debug)
 
+numXCells = numYCells;
 y = linspace(-height / 2, height / 2, numYCells);
-dx = y(2) - y(1);
-dt = .01*dx^2;
-numXCells = round((width / dx) + 1);
-%X = linspace(-width / 2, width / 2, numXCells);
 x = linspace(0, width, numXCells);
+dx = y(2) - y(1);
+%dt = .1 * dx^2;
+%dt = .5405 when numYCells = 38
+%dt = .5128 when numYCells = 40
+%dt = .1 * .5128;
+dt = .1*dx.^2;
+%numXCells = round((width / dx) + 1);
+%X = linspace(-width / 2, width / 2, numXCells);
+%x = linspace(0, width, numXCells);
 [X Y] = meshgrid(x,y);
 
 %ind will act like a sub2ind call, transforming 2D subscripts into a
@@ -61,8 +67,8 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     
     for i=2:numXCells-1
         for j=2:numYCells-1
-            u_star(ind(i,j),t) = u(ind(i,j),t) + dt * (1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(j,i);
-            v_star(ind(i,j),t) = v(ind(i,j),t) + dt * (1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(j,i);
+            u_star(ind(i,j),t) = u(ind(i,j),t) + dt * ((1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(j,i));
+            v_star(ind(i,j),t) = v(ind(i,j),t) + dt * ((1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(j,i));
         end
     end
     
@@ -133,32 +139,83 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
 %             p(ind(i,j),t) = temp(j,i);
 %         end
 %     end
-    
+%%%%%%%%%%%%%%%%
+
     A = zeros(numXCells*numYCells,numXCells*numYCells);
     b = zeros(numXCells*numYCells,1);
 
-    %interior points
-    for i=2:numXCells-1
-        for j=2:numYCells-1
+%     z = sqrt( (X-(L+R)).^2 + Y.^2 ) - R;
+%     E = .5 * R;
+%     
+%     delta = zeros(numYCells, numXCells);
+%     id = -E <= z & z <= E;
+%     delta(id) = (1 + cos(pi*(-z(id)/E)))/(2*E);
+%     delta_ = zeros(numYCells, numXCells);
+%     delta_(id) = -pi*sin(pi*(-z(id)/E))/(2*E^2);
+%     lapP = -1/R * delta_ + (1/R * delta) ./ (z+R);
+%     
+%     lapPHat = zeros(numXCells * numYCells);
+%     
+%     for i = 1:numXCells
+%         for j = 1:numYCells
+%             lapPHat(ind(i,j)) = lapP(j,i);
+%         end
+%     end
+    
+
+%     id = -E < z & z < E;
+%     id2 = z <= -E;
+
+%     px = zeros(numYCells,numXCells);
+%     py = zeros(numYCells,numXCells);
+% 
+%     px(id) = (1/(2*R*E)) * ((X(id) - (L+R)) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 )) + (cos(pi*z(id)/E)) .*(X(id) - (L+R)) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 + eps)));
+%     px(id2) = 0;
+% 
+%     py(id) = (1/(2*R*E)) * (Y(id) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 )) + (cos(pi*z(id)/E)) .*Y(id) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 + eps)));
+%     py(id2) = 0;
+% 
+%     pxHat = zeros(numXCells*numYCells,1);
+%     pyHat = zeros(numXCells*numYCells,1);
+% 
+%     for i = 1:numXCells
+%         for j = 1:numYCells
+%             pxHat(ind(i,j)) = px(j,i);
+%             pyHat(ind(i,j)) = py(j,i);
+%         end
+%     end
+
+%     %interior points
+    for i=1:numXCells-1
+        for j=1:numYCells-1
 
             A(ind(i,j), ind(i-1,j)) = 1;
             A(ind(i,j), ind(i,j)) = -4;
             A(ind(i,j), ind(i+1,j)) = 1;
             A(ind(i,j), ind(i,j+1)) = 1;
             A(ind(i,j), ind(i,j-1)) = 1;
-
-            %b(ind(i,j)) = (dx/2) * (u_star(ind(i+1,j),t) - u_star(ind(i-1,j),t) + v_star(ind(i,j+1),t ) - v_star(ind(i,j-1),t));
-            b(ind(i,j)) = (dx/2) * (u_star(ind(i+1,j+1),t) - u_star(ind(i,j+1),t) + ...
+            
+            b(ind(i,j)) = (1/dt)*(dx/2) * (u_star(ind(i+1,j+1),t) - u_star(ind(i,j+1),t) + ...
                                     u_star(ind(i+1,j),t) - u_star(ind(i,j),t) + ... 
                                     v_star(ind(i+1,j+1),t ) - v_star(ind(i+1,j),t) + ...
                                     v_star(ind(i,j+1),t ) - v_star(ind(i,j),t));
+
+%             b(ind(i,j)) = (1/2) * ((pxHat(ind(i+1,j+1)) - pxHat(ind(i,j+1)))/dx + ...
+%                                             (pxHat(ind(i+1,j)) - pxHat(ind(i,j)))/dx + ... 
+%                                             (pyHat(ind(i+1,j+1)) - pyHat(ind(i+1,j)))/dx + ...
+%                                             (pyHat(ind(i,j+1)) - pyHat(ind(i,j)))/dx);
+
+
+%         b(ind(i,j)) = lapPHat(ind(i,j));
+        
+        
         end
     end
 
     %boundary conditions
     %Left and right edges
 
-    for j = 2:numYCells-1
+    for j = 1:numYCells-1
         
         %Neumann
         %p_x = 0
@@ -177,8 +234,8 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
 %         A(ind(numXCells,j), ind(numXCells-2,j)) = 1;
 %         b(ind(numXCells,j)) = 0;
 
-        A(ind(1,j), ind(1,j)) = 1;
-        b(ind(1,j)) = 0;
+        %A(ind(1,j), ind(1,j)) = 1;
+        %b(ind(1,j)) = 0;
         A(ind(numXCells,j), ind(numXCells,j)) = 1;
         b(ind(numXCells,j)) = 0;
     end
@@ -197,8 +254,8 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
 %         A(ind(i,numYCells), ind(i,numYCells-2)) = 1;
 %         b(ind(i,numYCells)) = 0;
 
-        A(ind(i,1),ind(i,1)) = 1;
-        b(ind(i,1)) = 0;
+        %A(ind(i,1),ind(i,1)) = 1;
+        %b(ind(i,1)) = 0;
         A(ind(i,numYCells),ind(i,numYCells)) = 1;
         b(ind(i,numYCells)) = 0;
         
@@ -216,7 +273,7 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     end
     
     p(:,t) = A\b;
-    %cond(A);
+    %rcond(A)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 3 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     %u_next = u_star - grad(p) 
@@ -233,10 +290,10 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
 %         px = zeros(numYCells,numXCells);
 %         py = zeros(numYCells,numXCells);
 % 
-%         px(id) = (1/(2*R*E)) * ((X(id) - (L+R)) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 )) + (cos(pi*z(id)/E)) .*(X(id) - (L+R)) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2)));
+%         px(id) = (1/(2*R*E)) * ((X(id) - (L+R)) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 )) + (cos(pi*z(id)/E)) .*(X(id) - (L+R)) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 + eps)));
 %         px(id2) = 0;
 % 
-%         py(id) = (1/(2*R*E)) * (Y(id) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 )) + (cos(pi*z(id)/E)) .*Y(id) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2)));
+%         py(id) = (1/(2*R*E)) * (Y(id) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 )) + (cos(pi*z(id)/E)) .*Y(id) ./ (sqrt( (X(id)-(L+R)).^2 + Y(id).^2 + eps)));
 %         py(id2) = 0;
 %         
 %         pxHat = zeros(numXCells*numYCells,1);
@@ -257,11 +314,11 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
                     v(ind(i,j),t+1) = 0; 
                     u(ind(i,j),t+1) = 0; 
                 else
-                     u(ind(i,j),t+1) = u_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
-                     v(ind(i,j),t+1) = v_star(ind(i,j),t) - (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
+                     u(ind(i,j),t+1) = u_star(ind(i,j),t) - dt * (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i-1,j),t) + p(ind(i,j-1),t) - p(ind(i-1,j-1),t));
+                     v(ind(i,j),t+1) = v_star(ind(i,j),t) - dt * (1/(2*dx)) * (p(ind(i,j),t) - p(ind(i,j-1),t) + p(ind(i-1,j),t) - p(ind(i-1,j-1),t));
 
-%                      u(ind(i,j),t+1) = u_star(ind(i,j),t) - pxHat(ind(i,j));
-%                      v(ind(i,j),t+1) = v_star(ind(i,j),t) - pyHat(ind(i,j));
+%                      u(ind(i,j),t+1) = u_star(ind(i,j),t) - dt * pxHat(ind(i,j));
+%                      v(ind(i,j),t+1) = v_star(ind(i,j),t) - dt * pyHat(ind(i,j));
 
                 end
                 
