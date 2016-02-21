@@ -58,15 +58,16 @@ p = zeros(numXPCells*numYPCells, numTimeSteps);
 
 for t = 1:numTimeSteps  %This loop will surround the entire algoritm
 
-    %Set initial condition for u, flow of 0
-    if(t == 1)
-        for i=1:numXCells
-            for j=1:numYCells
-                u(ind(i,j), t) = 0;
-                v(ind(i,j), t) = 0;
-            end
+%Set initial condition for u, flow of 0
+if(t == 1)
+    uinit = zeros(numXCells*numYCells);
+    for i=1:numXCells
+        for j=1:numYCells
+            uinit(ind(i,j), t) = 0;
+            vinit(ind(i,j), t) = 0;
         end
-    end  
+    end
+end  
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 1 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     %Question:  Assume small strain tensor is symmetric, so transpose goes away?
@@ -75,11 +76,24 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
     %u_star = u + mu*(uxx + uyy) + F1
     %v_star = v + mu*(vxx + vyy) + F2
     
-    for i=2:numXCells-1
-        for j=2:numYCells-1
-            u_star(ind(i,j),t) = u(ind(i,j),t) + dt * ((1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(j,i));
-            v_star(ind(i,j),t) = v(ind(i,j),t) + dt * ((1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(j,i));
+    if t == 1
+    
+        for i=2:numXCells-1
+            for j=2:numYCells-1
+                u_star(ind(i,j),t) = uinit(ind(i,j)) + dt * ((1/(dx^2)) * mu * (uinit(ind(i-1,j)) - 4 * uinit(ind(i,j)) + uinit(ind(i+1,j)) + uinit(ind(i,j+1)) + uinit(ind(i,j-1))) + F1(j,i));
+                v_star(ind(i,j),t) = vinit(ind(i,j)) + dt * ((1/(dx^2)) * mu * (vinit(ind(i-1,j)) - 4 * vinit(ind(i,j)) + vinit(ind(i+1,j)) + vinit(ind(i,j+1)) + vinit(ind(i,j-1))) + F2(j,i));
+            end
         end
+    
+    else
+        
+        for i=2:numXCells-1
+            for j=2:numYCells-1
+                u_star(ind(i,j),t) = u(ind(i,j),t-1) + dt * ((1/(dx^2)) * mu * (u(ind(i-1,j),t-1) - 4 * u(ind(i,j),t-1) + u(ind(i+1,j),t-1) + u(ind(i,j+1),t-1) + u(ind(i,j-1),t-1)) + F1(j,i));
+                v_star(ind(i,j),t) = v(ind(i,j),t-1) + dt * ((1/(dx^2)) * mu * (v(ind(i-1,j),t-1) - 4 * v(ind(i,j),t-1) + v(ind(i+1,j),t-1) + v(ind(i,j+1),t-1) + v(ind(i,j-1),t-1)) + F2(j,i));
+            end
+        end
+        
     end
     
     %Set the boundary condition for u_star to be the same as u
@@ -258,13 +272,14 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
         
     end
     
+    A = sparse(A);
+    
     p(:,t) = A\b;
     %rcond(A)
 
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 3 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
     %u_next = u_star - grad(p) 
       
-    if t ~= numTimeSteps
         
 %%%%%%%%%%%%% Analytic p gradient, for debugging
 %         z = sqrt( (X-(L+R)).^2 + Y.^2 ) - R;
@@ -292,25 +307,22 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
 %         end
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
         
-        for i=1:numXCells
-            for j=1:numYCells 
-  
-                if j==1 || j==numYCells || i==1 || i==numXCells
-                    v(ind(i,j),t+1) = 0; 
-                    u(ind(i,j),t+1) = 0; 
-                else
-                     u(ind(i,j),t+1) = u_star(ind(i,j),t) - dt * (1/(2*dx)) * (p(pind(i+1,j+1),t) - p(pind(i,j+1),t) + p(pind(i+1,j),t) - p(pind(i,j),t));
-                     v(ind(i,j),t+1) = v_star(ind(i,j),t) - dt * (1/(2*dx)) * (p(pind(i+1,j+1),t) - p(pind(i+1,j),t) + p(pind(i,j+1),t) - p(pind(i,j),t));
+    for i=1:numXCells
+        for j=1:numYCells 
+
+            if j==1 || j==numYCells || i==1 || i==numXCells
+                v(ind(i,j),t) = 0; 
+                u(ind(i,j),t) = 0; 
+            else
+                 u(ind(i,j),t) = u_star(ind(i,j),t) - dt * (1/(2*dx)) * (p(pind(i+1,j+1),t) - p(pind(i,j+1),t) + p(pind(i+1,j),t) - p(pind(i,j),t));
+                 v(ind(i,j),t) = v_star(ind(i,j),t) - dt * (1/(2*dx)) * (p(pind(i+1,j+1),t) - p(pind(i+1,j),t) + p(pind(i,j+1),t) - p(pind(i,j),t));
 
 %                      u(ind(i,j),t+1) = u_star(ind(i,j),t) - dt * pxHat(ind(i,j));
 %                      v(ind(i,j),t+1) = v_star(ind(i,j),t) - dt * pyHat(ind(i,j));
 
-                end
-                                   
-                
-            end    
-        end        
-    end
+            end
+        end    
+    end        
     
     tmp1 = p(:, t);
     tmp2 = u(:, t);

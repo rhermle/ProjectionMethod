@@ -20,7 +20,7 @@ width = 20;
 R = 5;
 L = 5;
 %T = .25;
-timeSteps = 10;
+timeSteps = 1;
 
 quivRes = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -103,7 +103,6 @@ if checkError
     %2D: || u(x,y) || = sqrt( 1/M^2 sum_{j=1}^M sum_{k=1]^M u_{j,k}^2 }
     for i = 1:length(testPoints)
         testPoints(i)
-        tic;
         [ p u v x y xp yp numXCells numYCells dx(i)] = Stokes2DPC(g, testPoints(i), p0, mu, height, width, R, L, timeSteps, 0);
         
         dx(i) = y(2,1) - y(1,1);
@@ -125,8 +124,6 @@ if checkError
             L2EU(i) = sqrt(L2EU(i) / (numXCells * numYCells));
             L2EV(i) = sqrt(L2EV(i) / (numXCells * numYCells)); 
         end
-        
-        toc;
     end
 
     figure();
@@ -156,3 +153,10 @@ if checkError
     title('Error for V (Vertical Velocity)');
     print('_L2EV', '-djpeg');
 end
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%Benchmark%%%%%%%%%%%%
+
+tic;
+[ p u v x y xp yp numXCells numYCells dx(i)] = Stokes2DPC(g, 50, p0, mu, height, width, R, L, timeSteps, 0);
+toc;
+
