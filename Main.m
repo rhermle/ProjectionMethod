@@ -20,7 +20,7 @@ width = 20;
 R = 5;
 L = 5;
 %T = .25;
-timeSteps = 5;
+timeSteps = 10;
 
 quivRes = 1;
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -30,25 +30,11 @@ quivRes = 1;
 %Compute Stokes2DPCwith a high discretization and use it as the "analytical" solution
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %tic;
-[P U V X Y NUMXCELLS NUMYCELLS] = Stokes2DPC(g, 40, p0, mu, height, width, R,L, timeSteps, 0);
+[P U V X Y Xp Yp NUMXCELLS NUMYCELLS] = Stokes2DPC(g, 40, p0, mu, height, width, R,L, timeSteps, 0);
 
 %[P U V X Y NUMXCELLS NUMYCELLS] = pTest(height, width, R, L, timeSteps, 100);
 
 %toc;
-
-% i=2;
-% figure(6);
-% hold on;
-% quiver(X(1:quivRes:end,1:quivRes:end),Y(1:quivRes:end,1:quivRes:end),U(1:quivRes:end,1:quivRes:end, i),V(1:quivRes:end,1:quivRes:end, i));
-% z = (X - (R + L)).^2 + Y.^2 - R^2;
-% contour(X,Y,z,[0,0]);
-% streamline(X,Y,U(:,:,i),V(:,:,i),.1,1);
-% streamline(X,Y,U(:,:,i),V(:,:,i),.1,-1);
-% % streamline(X,Y,U,V,-width / 2, 0.1);
-% % streamline(X,Y,U,V,-width / 2, -0.1);
-% drawnow;
-% hold off;
-
 
 %surf(X,Y,U(:,:,2));
 
@@ -89,7 +75,7 @@ if animate
         title(message);
 
         figure();
-        surf(X,Y,P(:,:,i));
+        surf(Xp,Yp,P(:,:,i));
         message = sprintf('P, t = %f', i);
         title(message);
         drawnow;
@@ -118,29 +104,19 @@ if checkError
     for i = 1:length(testPoints)
         testPoints(i)
         tic;
-        [ p u v x y numXCells numYCells dx(i)] = Stokes2DPC(g, testPoints(i), p0, mu, height, width, R, L, timeSteps, 0);
+        [ p u v x y xp yp numXCells numYCells dx(i)] = Stokes2DPC(g, testPoints(i), p0, mu, height, width, R, L, timeSteps, 0);
         
-        %[p u v x y numXCells numYCells] = pTest(height, width, R, L, timeSteps, testPoints(i));
-        %[p u v x y numXCells numYCells] = pTest(height, width, R, L, timeSteps, 19);
         dx(i) = y(2,1) - y(1,1);
         
         %%%%%Interp must go from coarse to fine, not fine to coarse!!!!!!%%%%%%%
 
-        [P U V] = pTest(x,y,R,L);
+        [P U V] = pTest(x,y,xp,yp,R,L);
         
         if Linf
-%             L2EP(i) = max(max(abs(interp2(x,y,p(:,:,timeSteps),X,Y,'cubic') - P(:,:,timeSteps))));
-%             L2EU(i) = max(max(abs(interp2(x,y,u(:,:,timeSteps),X,Y,'cubic') - U(:,:,timeSteps))));
-%             L2EV(i) = max(max(abs(interp2(x,y,v(:,:,timeSteps),X,Y,'cubic') - V(:,:,timeSteps))));
-
             L2EP(i) = max(max(abs(p(:,:,timeSteps) - P)));
             L2EU(i) = max(max(abs(u(:,:,timeSteps) - U)));
             L2EV(i) = max(max(abs(v(:,:,timeSteps) - V)));
         else
-%             L2EP(i) = L2EP(i) + sum(sum((interp2(x,y,p(:,:,timeSteps),X,Y,'cubic') - P(:,:,timeSteps)).^2));
-%             L2EU(i) = L2EP(i) + sum(sum((interp2(x,y,u(:,:,timeSteps),X,Y,'cubic') - U(:,:,timeSteps)).^2));
-%             L2EV(i) = L2EP(i) + sum(sum((interp2(x,y,v(:,:,timeSteps),X,Y,'cubic') - V(:,:,timeSteps)).^2));
-
             L2EP(i) = L2EP(i) + sum(sum((p(:,:,timeSteps) - P).^2));
             L2EU(i) = L2EP(i) + sum(sum((u(:,:,timeSteps) - U).^2));
             L2EV(i) = L2EP(i) + sum(sum((v(:,:,timeSteps) - V).^2));
@@ -155,7 +131,7 @@ if checkError
 
     figure();
     %surf(x,y, p(:,:,timeSteps) - interp2(X,Y,P(:,:,timeSteps),x,y,'cubic'));
-    surf(x,y, p(:,:,timeSteps) - P);
+    surf(xp,yp, p(:,:,timeSteps) - P);
     %surf(x,y, p(:,:,timeSteps) - P(1:2:end,1:2:end,timeSteps));
     title('Localized Error for P (Pressure)');
     print('LocalPError', '-djpeg');
