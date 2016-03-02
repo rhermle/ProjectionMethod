@@ -61,6 +61,7 @@ for t = 1:numTimeSteps  %This loop will surround the entire algoritm
 %Set initial condition for u, flow of 0
 if(t == 1)
     uinit = zeros(numXCells*numYCells);
+    vinit = zeros(numXCells*numYCells);
     for i=1:numXCells
         for j=1:numYCells
             uinit(ind(i,j), t) = 0;
@@ -70,8 +71,6 @@ if(t == 1)
 end  
     
     %%%%%%%%%%%%%%%%%%%%%%%%%%%Step 1 of algorithm%%%%%%%%%%%%%%%%%%%%%%%%%
-    %Question:  Assume small strain tensor is symmetric, so transpose goes away?
-    %Random Question:  Do they ever use FFT to solve these?
     
     %u_star = u + mu*(uxx + uyy) + F1
     %v_star = v + mu*(vxx + vyy) + F2

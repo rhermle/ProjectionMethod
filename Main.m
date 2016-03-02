@@ -134,7 +134,9 @@ if checkError
     print('LocalPError', '-djpeg');
 
     save('data.mat','dx','L2EP','L2EU','L2EV');
+    
     figure()
+    subplot(2,2,1);
     loglog(dx,L2EP,'-',dx, dx.^2 *  L2EP(end) / dx(end)^2,'--');
     %loglog(dx,L2EP,'-',dx,dx.^2,'--');
     title('Error for P (Pressure)');
@@ -143,20 +145,34 @@ if checkError
     %loglog(d,L2EP,'-',d,L2EP(1)-d(1) + d,'r--',d,L2EP(1)-d(1)^2 + d.^2,'g--');
     %title('L2 Error for P (Pressure)');
 
-    figure()
+    subplot(2,2,2);
     loglog(dx,L2EU,'-',dx,dx.^2 *  L2EU(end) / dx(end)^2,'--');
     title('Error for U (Horizontal Velocity)');
     print('_L2EU', '-djpeg');
 
-    figure()
+    subplot(2,2,3);
     loglog(dx,L2EV,'-',dx,dx.^2 *  L2EV(end) / dx(end)^2,'--');
     title('Error for V (Vertical Velocity)');
     print('_L2EV', '-djpeg');
 end
 
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%Benchmark%%%%%%%%%%%%
-
+%%%%%%%%%%%%%benchmark%%%%%%%%%%%%%%%%
+REPS = 10;
+num = [25 50 75 100];
 tic;
-[ p u v x y xp yp numXCells numYCells dx(i)] = Stokes2DPC(g, 50, p0, mu, height, width, R, L, timeSteps, 0);
-toc;
+for i = 1:4
+    for j = 1:REPS
+        [ p u v x y] = Stokes2DPC(g, num(i), p0, mu, height, width, R, L, timeSteps, 0);
+    end
+    averageTime(i) = toc / REPS;
+end
 
+averageTime
+
+figure()
+plot(num,averageTime);
+title('Execution Time vs. Number of Discretization Points');
+xlabel('M');
+ylabel('Execution Time (s)');
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
