@@ -158,10 +158,12 @@ end
 
 %%%%%%%%%%%%%benchmark%%%%%%%%%%%%%%%%
 REPS = 10;
-num = [25 50 75 100 200 400];
+num = [25 50 75 100 200];
 tic;
 for i = 1:length(num)
+    num(i)
     for j = 1:REPS
+        j
         [ p u v x y] = Stokes2DPC(g, num(i), p0, mu, height, width, R, L, timeSteps, 0);
     end
     averageTime(i) = toc / REPS;
