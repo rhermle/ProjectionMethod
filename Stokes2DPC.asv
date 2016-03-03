@@ -79,8 +79,8 @@ end
     
         for i=2:numXCells-1
             for j=2:numYCells-1
-                u_star(ind(i,j),t) = u(ind(i,j),t) + dt * ((1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(j,i));
-                v_star(ind(i,j),t) = v(ind(i,j),t) + dt * ((1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(j,i));
+                u_star(ind(i,j),t) = u(ind(i,j)) + dt * ((1/(dx^2)) * mu * (u(ind(i-1,j),t) - 4 * u(ind(i,j),t) + u(ind(i+1,j),t) + u(ind(i,j+1),t) + u(ind(i,j-1),t)) + F1(j,i));
+                v_star(ind(i,j),t) = v(ind(i,j)) + dt * ((1/(dx^2)) * mu * (v(ind(i-1,j),t) - 4 * v(ind(i,j),t) + v(ind(i+1,j),t) + v(ind(i,j+1),t) + v(ind(i,j-1),t)) + F2(j,i));
             end
         end
     

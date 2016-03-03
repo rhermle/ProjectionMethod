@@ -158,7 +158,7 @@ end
 
 %%%%%%%%%%%%%benchmark%%%%%%%%%%%%%%%%
 REPS = 10;
-num = [25 50 75 100 200];
+num = [25 50 75 100 150 200];
 tic;
 for i = 1:length(num)
     num(i)
