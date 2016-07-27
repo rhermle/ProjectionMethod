@@ -66,18 +66,27 @@ if animate
         
         figure();
         surf(X,Y,U(:,:,i));
-        message = sprintf('U, t = %f', i);
-        title(message);
+        xlabel('x');
+        ylabel('y');
+        zlabel('u');
+        %message = sprintf('U, t = %f', i);
+        %title(message);
 
         figure();
         surf(X,Y,V(:,:,i));
-        message = sprintf('V, t = %f', i);
-        title(message);
+        xlabel('x');
+        ylabel('y');
+        zlabel('v');
+        %message = sprintf('V, t = %f', i);
+        %title(message);
 
         figure();
         surf(Xp,Yp,P(:,:,i));
-        message = sprintf('P, t = %f', i);
-        title(message);
+        xlabel('x');
+        ylabel('y');
+        zlabel('p');
+        %message = sprintf('P, t = %f', i);
+        %title(message);
         drawnow;
         
         %pause();
@@ -87,7 +96,7 @@ end
 if checkError
     
     %num / 2 must be even
-    num = 40;
+    num = 50;
     
     %Compute the L2E with 20 different grid spacing values
     %Outputting NAN when n is odd
@@ -139,7 +148,9 @@ if checkError
     subplot(2,2,1);
     loglog(dx,L2EP,'-',dx, dx.^2 *  L2EP(end) / dx(end)^2,'--');
     %loglog(dx,L2EP,'-',dx,dx.^2,'--');
-    title('Error for P (Pressure)');
+    xlabel('\Delta x');
+    ylabel('Discrete L2 Error (p)');
+    %title('Error for P (Pressure)');
     print('_L2EP', '-djpeg');
 
     %loglog(d,L2EP,'-',d,L2EP(1)-d(1) + d,'r--',d,L2EP(1)-d(1)^2 + d.^2,'g--');
@@ -147,18 +158,23 @@ if checkError
 
     subplot(2,2,2);
     loglog(dx,L2EU,'-',dx,dx.^2 *  L2EU(end) / dx(end)^2,'--');
-    title('Error for U (Horizontal Velocity)');
+    xlabel('\Delta x');
+    ylabel('Discrete L2 Error (u)');
+    %title('Error for U (Horizontal Velocity)');
     print('_L2EU', '-djpeg');
 
     subplot(2,2,3);
     loglog(dx,L2EV,'-',dx,dx.^2 *  L2EV(end) / dx(end)^2,'--');
-    title('Error for V (Vertical Velocity)');
+    xlabel('\Delta x');
+    ylabel('Discrete L2 Error (v)');
+    %title('Error for V (Vertical Velocity)');
     print('_L2EV', '-djpeg');
 end
 
 %%%%%%%%%%%%%benchmark%%%%%%%%%%%%%%%%
 REPS = 10;
-num = [25 50 75 100 150 200];
+%num = [25 50 75 100 150 200];
+num = [25 50 75 100];
 tic;
 for i = 1:length(num)
     num(i)

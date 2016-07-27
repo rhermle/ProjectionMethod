@@ -19,7 +19,7 @@ if graph
     figure(12345);
     hold on;
     quiver(x,y,f1,f2);
-    title('F1 and F2');
+    %title('F1 and F2');
     %quiver(x(1:quivRes:end,1:quivRes:end),Y(1:quivRes:end,1:quivRes:end),U(1:quivRes:end,1:quivRes:end, i),V(1:quivRes:end,1:quivRes:end, i));
     contour(x,y,z,[0,0]);
     hold off;
